@@ -5,6 +5,7 @@ from flask import Flask, request, jsonify
 import openai
 from openai import OpenAI
 import functions
+import json
 
 # Check OpenAI version is correct
 required_version = version.parse("1.1.1")
@@ -64,6 +65,31 @@ def chat():
     print(f"Run status: {run_status.status}")
     if run_status.status == 'completed':
       break
+    elif run_status.status == 'requires_action':
+      for tool_call in run_status.required_action.submit_tool_outputs.tool_calls:
+        if tool_call.function.name == 'add_to_airtable':
+          arguments = json.loads(tool_call.function.arguments)
+          output = functions.add_to_airtable(arguments['notiz'])
+          client.beta.threads.runs.submit_tool_outputs(thread_id=thread_id,
+                                                           run_id=run.id,
+                                                           tool_outputs=[{
+                                                               "tool_call_id":
+                                                               tool_call.id,
+                                                               "output":
+                                                               json.dumps(output)
+                                                     }])
+        elif tool_call.function.name == 'calendar':
+          arguments = json.loads(tool_call.function.arguments)
+          output = functions.calendar(arguments["event"], arguments["start"],
+             arguments["duration"])
+          client.beta.threads.runs.submit_tool_outputs(thread_id=thread_id,
+                 run_id=run.id,
+                 tool_outputs=[{
+                     "tool_call_id":
+                     tool_call.id,
+                     "output":
+                     json.dumps(output)
+           }])
     sleep(1)  # Wait for a second before checking again
 
   # Retrieve and return the latest message from the assistant
