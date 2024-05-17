@@ -16,6 +16,7 @@ def searchCalendar(start):
   response = requests.post(url,headers=headers, json=data)
   if response.status_code == 200:
     print('Erfolgreich')
+    return response.json()
   else:
     print(f"Fehler! {response.text}" )
   
