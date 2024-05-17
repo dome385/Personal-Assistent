@@ -90,6 +90,17 @@ def chat():
                      "output":
                      json.dumps(output)
            }])
+        elif tool_call.function.name == 'searchCalendar':
+          arguments = json.loads(tool_call.function.arguments)
+          output = functions.searchCalendar(arguments["start"])
+          client.beta.threads.runs.submit_tool_outputs(thread_id=thread_id,
+                 run_id=run.id,
+                 tool_outputs=[{
+                     "tool_call_id":
+                     tool_call.id,
+                     "output":
+                     json.dumps(output)
+           }])
     sleep(1)  # Wait for a second before checking again
 
   # Retrieve and return the latest message from the assistant
