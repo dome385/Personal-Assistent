@@ -5,6 +5,24 @@ import requests
 
 AIRTABLE_API_KEY = os.environ['AIRTABLE_API_KEY']
 
+def writeEmail(address, subject, body):
+  url = "https://hook.eu2.make.com/mj210ikfkikej28lgukd8owoigp8pwvm"
+  headers = {
+    "Content-Type": "application/json"
+  }
+  data = {
+    "Address": address,
+    "Subject": subject,
+    "Body": body
+  }
+  response = requests.post(url,headers=headers, json=data)
+  if response.status_code == 200:
+    print('Erfolgreich')
+  else:
+    print(f"Fehler! {response.text}")
+
+
+
 def searchCalendar(start):
   url = "https://hook.eu2.make.com/4eyjsqboj6yhl9r5uvqh0erbvjkb37oy"
   headers = {
@@ -75,7 +93,7 @@ def create_assistant(client):
                                purpose='assistants')
 
     assistant = client.beta.assistants.create(instructions="""
-   Du bist der persönliche Assistent von Dominik Niestroj, du kümmerst dich darum seine Notizen in Airtable hinzuzufügen. Du bist außerdem Verantwortlich für das Management seines Kalenders. Du kannst Termine in sein Kalender mit der Function calendar hinzufügen, dafür brauchst den Namen des Termin den speicherst du unter event, dann das Datum und Uhrzeit welches in start gespeichert wird, bedenke das wir im Jahr 2024 sind außerdem brauchst du die Dauer des Termins welche in duration gespeichert wird. Führe die Funktion erst aus wenn du diese Parameter hast. Falls nach den Terminen gefragt wird an einem spezifischen Datum führe die Funktion searchCalendar aus. Das Datum fügst du in das Feld Start ein.
+   Du bist der persönliche Assistent von Dominik Niestroj, du kümmerst dich darum seine Notizen in Airtable hinzuzufügen. Du bist außerdem Verantwortlich für das Management seines Kalenders. Du kannst Termine in sein Kalender mit der Function calendar hinzufügen, dafür brauchst den Namen des Termin den speicherst du unter event, dann das Datum und Uhrzeit welches in start gespeichert wird, bedenke das wir im Jahr 2024 sind außerdem brauchst du die Dauer des Termins welche in duration gespeichert wird. Führe die Funktion erst aus wenn du diese Parameter hast. Falls nach den Terminen gefragt wird an einem spezifischen Datum führe die Funktion searchCalendar aus. Das Datum fügst du in das Feld Start ein. Außerdem kannst du Emails für Dominik schreiben, wenn eine Email geschrieben werden soll brauchst du drei Parameter diese sind: die E-Mail Adresse, den Betreff und den Text. Führe die Funktion writeEmail aus wenn du diese Parameter hast. Führe diese Funktion nur aus wenn du alle drei Parameter hast. Den Text der Mail schreibe in body, der Betreff in subject und die E-Mail Adresse in address. Frage immer nach ob die Email von dir generiert werden soll, oder der Text selber geschrieben wird. Wenn du die E-Mail generieren sollst frage nach um was es in der Mail gehen soll, generiere dann einen E-Mail Text und frage ob dieser in Ordnung ist, wenn Ja erst dann benutze diesen Text als Paramter. Schreibe den E-Mail Text immer immer im HTML Format.
           """,
                                               model="gpt-4-turbo",
                                               tools=[{
@@ -142,7 +160,33 @@ def create_assistant(client):
                                                    }
                                                  }
 
-                                               }
+                                               },
+                                                     {
+                                                        "type": "function",
+                                                        "function": {
+                                                          "name": "writeEmail",
+                                                          "description": "Eine Email an eine bestimmte Adresse schreiben und im Entwurf speichern.",
+                                                          "parameters": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                              "address": {
+                                                                "type": "string",
+                                                                "description": "Die E-Mail Adresse des Empfängers"
+                                                              },
+
+                                                               "subject": {
+                                                                 "type": "string",
+                                                                 "description": "Betreff der E-Mail"
+                                                               },
+                                                               "body": {
+                                                                 "type": "string",
+                                                                 "description": "Textinhalt der E-Mail"
+                                                               },
+                                                            },
+                                                            "required": ["address", "subject", "body"]
+                                                          }
+                                                        }
+                                                      }
                                                     ],
                                               file_ids=[file.id])
 
